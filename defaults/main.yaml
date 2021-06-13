@@ -1,0 +1,10 @@
+---
+
+nft_pkg_to_install:
+  - nftables
+
+nft_pkg_to_purge:
+  - iptables
+
+nft_conf_dir: 'etc/nftables.d'
+nft_backup: true

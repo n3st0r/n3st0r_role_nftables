@@ -1,0 +1,61 @@
+---
+
+- name: Include OS specific defaults configuration
+  include_vars: "{{ item }}"
+  with_first_found:
+    - paths:
+        - "defaults"
+    - files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yaml"
+        - "{{ ansible_distribution }}.yaml"
+        - "{{ ansible_os_family }}.yaml"
+      skip: yes
+  tags:
+    - nftables
+
+
+- name: Ensure unneed packages are purged
+  become: yes
+  ansible.builtin.apt:
+    name: '{{ nft_pkg_to_purge }}'
+    state: absent
+    purge: yes
+  tags:
+    - nftables
+
+
+- name: Ensure need packages are installed
+  become: yes
+  ansible.builtin.apt:
+    name: '{{ nft_pkg_to_install }}'
+    state: latest
+    update_cache: yes
+    cache_valid_time: 3600
+  tags:
+    - nftables
+
+
+- name: Ensure to create /etc/nftables.d directory
+  file:
+    path: "{{ nft_conf_dir }}"
+    state: directory
+    mode: 0755
+  tags:
+    - nftables
+
+
+- name: Generate nftables.conf
+  ansible.builtin.template:
+    src: "etc/nftables.conf"
+    dest: "/etc/nftables.conf"
+    owner: root
+    group: root
+    mode: 0755
+    backup: '{{ nft_backup }}'
+  notify: 'Reload nftables service'
+
+
+- name: Ensure nftables service is started
+  ansible.builtin.systemd:
+      state: started
+      name: nftables

@@ -1,0 +1,8 @@
+---
+
+- name: Reload nftables service
+  ansible.builtin.systemd:
+      state: restarted
+      daemon_reload: no
+      name: nftables
+  listen: Reload nftables service
